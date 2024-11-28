@@ -50,7 +50,7 @@ class Html2PdfService {
     private fun initPlaywright() {
         try {
             val createOptions = CreateOptions()
-            val playwright: Playwright = Playwright.create(createOptions)
+            val playwright = Playwright.create(createOptions)
             val launchOptions = LaunchOptions()
             launchOptions.setHeadless(true)
             browser = playwright.chromium().launch(launchOptions)
@@ -75,7 +75,6 @@ class Html2PdfService {
         val extension: String = Optional.ofNullable(payload.extension).orElse("")
 
         try {
-            init()
             Files.createDirectories(Paths.get("app/dump/docs").toAbsolutePath())
             val htmlFilePath = "app/dump/docs/" + UUID.randomUUID() + ".html"
             val pdfFilePath = "app/dump/docs/" + UUID.randomUUID() + ".pdf"
@@ -109,7 +108,16 @@ class Html2PdfService {
 
     private fun convertPlaywright(htmlFileUrl: String, pdfAbsFilePath: Path): InputStream {
         try {
-            val page = playwrightBrowserContext!!.newPage()
+            initPlaywright()
+
+            val browserContext = playwrightBrowserContext ?: run {
+                Playwright.create(CreateOptions())
+                    .chromium()
+                    .launch(LaunchOptions())
+                    .newContext(NewContextOptions())
+            }
+
+            val page = browserContext.newPage()
 
             val navigateOptions: Page.NavigateOptions = Page.NavigateOptions()
             navigateOptions.setWaitUntil(WaitUntilState.NETWORKIDLE)
